@@ -1,0 +1,101 @@
+﻿@page "/"
+@inject IProductService productService
+@rendermode InteractiveServer
+
+<PageTitle>Home</PageTitle>
+
+@if (products is null)
+{
+    <p>No inventory</p>
+}
+else
+{
+    <div class="container">
+        <div class="row">
+            @foreach (var p in products)
+            {
+                <div class="col col-md-4 mb-2">
+                    <div class="card text-end border-5 border-dark p-2">
+                        <div class="img-container">
+                            <img src="@p.ImgUri" class="card-img" alt="@p.ProductName"/>
+                            @if(p.Quantity < 1)
+                            {
+                                <div class="sold-out">
+                                    <div class="sold-out-text">Sold out</div> 
+                                </div>
+                            }
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">@p.ProductName</h5>
+                            <p style="font-size: 10px">@p.ProductId</p>
+                            <p class="card-text">@p.Description</p>
+                            <h4 class="card-text text-danger">@p.PriceEur €</h4>
+                            @if (p.Quantity > 0)
+                            {
+                                <button class="btn btn-primary" @onclick="() => AddToCartAlert(p.Id)">Add to cart</button>
+                            }
+                            @if (p.Id == selectedId)
+                            {
+                                <div class="overlay"/>
+                                <Alert id="@selectedId" Class="cart-alert" @ref="cartAlert" Color="AlertColor.Dark">
+                                    <p>In stock: @p.Quantity</p>
+                                    Quantity: <InputNumber @bind-Value="quantity"></InputNumber> 
+                                    <Button Class="btn btn-primary" @onclick="() => AddToCart(p)">Add</Button>
+                                    @if (errorMessage != null)
+                                    {
+                                        <p id="errorMessage">@errorMessage</p> 
+                                    }
+                                    <Button Class="btn btn-warning" @onclick="CloseAlert">Cancel</Button>
+                                </Alert>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    Alert? cartAlert;
+    int quantity;
+    string? selectedId = null;
+    string? errorMessage = null;
+
+    List<ProductDto>? products;
+
+    public void AddToCartAlert(string id)
+    {
+        selectedId = id;
+    }
+
+    public void AddToCart(ProductDto p)
+    {
+        if (quantity <= p.Quantity && quantity > 0)
+        {
+            //send to cart 
+            quantity = 0;
+            selectedId = null;
+        }
+        else if(quantity <= 0)
+        {
+            errorMessage = "Amount has to be greater than 0";
+        }
+        else if(quantity > p.Quantity)
+        {
+            errorMessage = "Not enough in stock";
+        }
+    }
+
+    public async Task CloseAlert()
+    {
+        await cartAlert.CloseAsync();
+        selectedId = null;
+        errorMessage = null;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        products = await productService.GetAll();
+    }
+}
+

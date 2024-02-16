@@ -1,0 +1,103 @@
+﻿@page "/AddProduct"
+@inject IProductService productService
+@rendermode InteractiveServer
+@inject NavigationManager navigator
+
+<PageTitle>Add Product</PageTitle>
+
+<h3>AddProduct</h3>
+
+<form class="d-flex flex-column justify-content-evenly" @onsubmit="SubmitProduct">
+    <label>
+        Product Id:
+    </label>
+    <InputText @bind-Value="pProductId" />
+    <label>
+        Product Name:
+    </label>
+    <InputText @bind-Value="pProductName" />
+    <label>
+        Description:
+    </label>
+    <InputTextArea @bind-Value="pDescription" />
+    <label>
+        Price:
+    </label>
+    <InputNumber @bind-Value="pPriceEur" />
+    <label>
+        Img URI:
+    </label>
+    <InputText @bind-Value="pImgUri" />
+    <button type="submit">Add Product</button>
+</form>
+<br />
+<br />
+<br />
+<br />
+<div class="container">
+    <div class="row">
+        <InputRadioGroup @bind-Value="updatedProduct">
+            @if(_products is not null)
+            {
+                @foreach (var p in _products)
+                {
+                    <div class="col col-3 mb-4">
+                        @p.ProductName 
+                        @p.Quantity
+                        <InputRadio Value="@p.Id"></InputRadio>
+                    </div>
+                }
+            }
+        </InputRadioGroup>
+        <InputNumber @bind-Value="updateQuantity"></InputNumber>
+        <button type="submit" class="btn btn-primary" @onclick="UpdateQuantity">Update</button>
+        @if (errorMessage != null)
+        {
+            <div>@errorMessage</div>
+        }
+    </div>
+</div>
+
+@code {
+    string pProductId = ""; string pProductName = ""; string pDescription = ""; double pPriceEur; string pImgUri = "";
+    List<ProductDto>? _products;
+
+    string? updatedProduct;
+    int? updateQuantity = null;
+    string? errorMessage;
+
+    public async Task SubmitProduct()
+    {
+        ProductRequest product = new()
+            {
+                ProductId = pProductId,
+                ProductName = pProductName,
+                Description = pDescription,
+                PriceEur = pPriceEur,
+                ImgUri = pImgUri
+            };
+        await productService.Add(product);
+        navigator.Refresh(true);
+    }
+
+    public async Task UpdateQuantity()
+    {
+        if (updatedProduct is not null)
+        {
+            try
+            {
+                await productService.UpdateQuantity(updatedProduct, updateQuantity ?? 0);
+                navigator.Refresh(true);
+            }
+            catch(Exception ex)
+            {
+                errorMessage = ex.Message;
+            }
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var products = await productService.GetAll();
+        _products = products;
+    }
+}
