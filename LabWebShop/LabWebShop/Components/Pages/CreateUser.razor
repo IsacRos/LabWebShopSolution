@@ -1,0 +1,36 @@
+﻿@page "/create-user"
+@inject IIdentityService identityService
+@rendermode InteractiveServer
+
+<h3>CreateUser</h3>
+
+<EditForm Model="user" OnValidSubmit="AddUser">
+    <InputText @bind-Value="user.Name" placeholder="Name"></InputText>
+    <InputText @bind-Value="user.Email" placeholder="Email"></InputText>
+    <InputText @bind-Value="user.Password" placeholder="Password"></InputText>
+    <button class="btn btn-primary" type="submit">Submit</button>
+</EditForm>
+
+@foreach(var s in _message)
+{
+    <div>@s</div>    
+}
+
+@code {
+    User user = new()
+        {
+            Name = "",
+            Email = "",
+            Password = "",
+        };
+    List<string> _message = new();
+
+    public async Task AddUser()
+    {
+        var message = await identityService.CreateUser(user);
+        user.Name = "";
+        user.Email = "";
+        user.Password = "";
+        _message = message;
+    }
+}

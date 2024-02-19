@@ -1,0 +1,27 @@
+﻿@page "/create-role"
+@inject IIdentityService identityService
+@rendermode InteractiveServer
+
+<h3>CreateUser</h3>
+
+<EditForm Model="roleName" OnValidSubmit="AddRole">
+    <InputText @bind-Value="roleName" placeholder="Role Name"></InputText>
+    <button class="btn btn-primary" type="submit">Submit</button>
+</EditForm>
+
+@foreach (var s in _message)
+{
+    <div>@s</div>
+}
+
+@code {
+    string roleName = string.Empty;
+    List<string> _message = new();
+
+    public async Task AddRole()
+    {
+        var message = await identityService.CreateRole(roleName);
+        roleName = string.Empty;
+        _message = message;
+    }
+}

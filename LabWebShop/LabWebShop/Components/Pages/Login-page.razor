@@ -1,0 +1,24 @@
+﻿@page "/login-page"
+@inject IAccountService accountService
+@rendermode InteractiveServer
+
+<h3>Login</h3>
+
+<EditForm Model="this" OnValidSubmit="Login">
+    <InputText @bind-Value="email" placeholder="E-mail"></InputText>
+    <InputText @bind-Value="password" placeholder="Password"></InputText>
+    <button class="btn btn-primary" type="submit">Log in</button>
+</EditForm>
+<p>@_message</p>
+
+@code {
+    string email;
+    string password;
+    string _message = string.Empty;
+
+    public async Task Login()
+    {
+        var message = await accountService.Login(email, password, "/weather");
+        _message = message;
+    }
+}

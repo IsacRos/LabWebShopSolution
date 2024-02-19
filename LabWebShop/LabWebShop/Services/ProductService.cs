@@ -1,9 +1,10 @@
 ﻿using LabWebShop.Data;
+using LabWebShop.Models;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace LabWebShop.Models;
+namespace LabWebShop.Services;
 
 public class ProductService : IProductService
 {
@@ -46,9 +47,9 @@ public class ProductService : IProductService
     public async Task UpdateQuantity(string id, int n)
     {
         var product = await _context.Products.FindAsync(ObjectId.Parse(id));
-        if (product != null) 
+        if (product != null)
         {
-            product.Quantity = product.Quantity + n >= 0 ? product.Quantity + n : throw new ArgumentException("Can't be less than 0");        
+            product.Quantity = product.Quantity + n >= 0 ? product.Quantity + n : throw new ArgumentException("Can't be less than 0");
             _context.Products.Update(product);
             await _context.SaveChangesAsync();
         }

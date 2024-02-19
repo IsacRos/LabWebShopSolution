@@ -1,6 +1,4 @@
-﻿using MongoDB.Bson;
-
-namespace LabWebShop.Models;
+﻿namespace LabWebShop.Models;
 
 public class ProductDto
 {

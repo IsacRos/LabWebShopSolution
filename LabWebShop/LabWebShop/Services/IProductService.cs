@@ -1,4 +1,6 @@
-﻿namespace LabWebShop.Models
+﻿using LabWebShop.Models;
+
+namespace LabWebShop.Services
 {
     public interface IProductService
     {

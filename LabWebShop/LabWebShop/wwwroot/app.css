@@ -53,6 +53,7 @@ h1:focus {
 .card {
     height: 30rem;
     border-radius: 60px;
+    min-width: 150px;
 }
 .img-container {
     height: 15rem;
@@ -68,6 +69,7 @@ h1:focus {
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
     min-height: 100%;
+    min-width: 100%;
 }
 .sold-out {
     width: 100%;
@@ -94,6 +96,7 @@ h1:focus {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    
 }
 .overlay {
     position: fixed;
