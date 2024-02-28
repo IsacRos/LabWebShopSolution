@@ -1,12 +1,12 @@
 using Blazored.LocalStorage;
 using BookingSystem.Server.Data;
-//using LabWebShop.Client.Classes;
 using LabWebShop.Components;
 using LabWebShop.Data;
 using LabWebShop.Models;
 using LabWebShop.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,9 +15,12 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IIdentityService, IdentityService>();
-builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<ICheckOutService, CheckOutService>();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddBlazorBootstrap();
 
@@ -29,8 +32,30 @@ builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("Mo
 builder.Services.AddDbContext<WebShopDbContext>(options =>
     options.UseMongoDB(mongoDbSettings?.AtlasURI ?? "", mongoDbSettings?.DatabaseName ?? ""));
 
-builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(op => op.User.RequireUniqueEmail=true)
+builder.Services.AddIdentity<ApplicationUser, ApplicationRole>()
     .AddMongoDbStores<ApplicationUser, ApplicationRole, Guid>(mongoDbSettings?.AtlasURI ?? "", mongoDbSettings?.DatabaseName ?? "");
+
+builder.Services.AddScoped<ICartService, CartService>();
+
+builder.Services.Configure<IdentityOptions>(o =>
+{
+    o.Password.RequireDigit = false;
+    o.Password.RequiredUniqueChars = 2;
+    o.Password.RequireUppercase = false;
+    o.Password.RequireNonAlphanumeric = false;
+    o.Password.RequiredLength = 4;
+    o.User.RequireUniqueEmail = true;
+});
+
+builder.Services.ConfigureApplicationCookie(o =>
+{
+    o.Cookie.HttpOnly = true;
+    o.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+
+    o.LoginPath = "/login-page";
+    o.AccessDeniedPath = "/Identity/Account/AccessDenied";
+    o.SlidingExpiration = true;
+});
 
 var app = builder.Build();
 
@@ -50,6 +75,7 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
+app.MapControllers();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()

@@ -1,0 +1,29 @@
+﻿@page "/check-out/{OrderId}"
+@rendermode InteractiveAuto
+
+
+<h3>THanl you for yOUr purdshsh</h3>
+<br />
+<br />
+<h4>Order will be sent to:</h4>
+<p>@creds?.FirstName @creds?.LastName</p>
+<p>@creds?.Address</p>
+<br />
+<h2>IF PAYMENT WITH THIS CARD:</h2>
+<p>@creds?.Creditcard</p>
+<h1>DOESN'T GO THROUGH WE WILL SELL THIS NUMBER:</h1>
+<p>@creds?.PhoneNumber</p>
+<h3>...to every sales office in India</h3>
+
+@code {
+    [Parameter]
+    public string? OrderId { get; set; }
+    HttpClient http = new();
+    UserCredentials? creds;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var credentials = await http.GetFromJsonAsync<UserCredentials>($"https://localhost:7214/api/CheckOut/{OrderId}");
+        creds = credentials;
+    }
+}

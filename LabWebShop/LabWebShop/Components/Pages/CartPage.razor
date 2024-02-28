@@ -1,0 +1,133 @@
+﻿@page "/cart"
+@inject ICartService cartService
+@inject IProductService productService
+@inject ICheckOutService checkOutService
+@rendermode InteractiveServer
+@inject NavigationManager navigator
+@inject ILocalStorageService localStorage
+@attribute [StreamRendering]
+@inject AuthenticationStateProvider authState
+
+<h3>CartPage</h3>
+
+<div class="container">
+    @if(_products is not null)
+    {
+        @foreach(var p in _products)
+        {
+            <p>@p.ProductName</p>
+            <p>@p.Quantity</p>
+            @if(lsLen > 0)
+            {
+                <span><button class="btn btn-danger" @onclick="ClearLocalStorage">Clear local cart</button></span>
+            }
+            else
+            {
+                <span><button class="btn btn-danger" @onclick="() => RemoveFromCartAlert(p.Id)">Remove</button></span>
+                @if(p.Id == selectedId)
+                {
+                    <Alert id="@selectedId">
+                        <InputNumber min="0" @bind-Value="removeQuantity"></InputNumber>
+                        <span><button class="btn btn-danger" @onclick="() => RemoveFromCart(p.Id, removeQuantity)">Remove</button></span>
+                    </Alert>
+                    
+                }
+            }
+        }
+        @if (_products.Count() > 0)
+        {
+            <button class="btn btn-primary" @onclick="GoToCheckOut">Checkout</button>
+            <h2>Total: €@(_products.Sum(x => x.PriceEur))</h2>
+        }
+        @if(checkAuth == true)
+        {
+            <EditForm class="container" Model="cred" OnValidSubmit="CheckOut">
+                <InputText class="row mt-3" @bind-Value="cred.FirstName" placeholder="First name"></InputText>
+                <InputText class="row mt-3" @bind-Value="cred.LastName" placeholder="Last name"></InputText>
+                <InputTextArea class="row mt-3" @bind-Value="cred.Address" placeholder="Address"></InputTextArea>
+                <InputText class="row mt-3" @bind-Value="cred.PhoneNumber" placeholder="Phone number"></InputText>
+                <InputText class="row mt-3" @bind-Value="cred.Creditcard" placeholder="Credit card number"></InputText>
+                <button class="btn btn-primary" type="submit">Confirm Purchase</button>
+            </EditForm>
+        }
+        else if (checkAuth == false)
+        {
+            <h3 class="text-danger">You must be logged in to purchase</h3>
+        }
+    }
+</div>
+
+@code {
+    List<ProductDto>? _products = new();
+    int removeQuantity = 0;
+    int lsLen = 0;
+    string? selectedId = null;
+    bool? checkAuth = null;
+    UserCredentials cred = new();
+    string errorMessage = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        lsLen = await localStorage.LengthAsync();
+        if(firstRender)
+        {
+            bool? auth = authState.GetAuthenticationStateAsync()?.Result?.User?.Identity?.IsAuthenticated;
+            _products = auth is true ? await cartService.GetItems() : await cartService.GetFromLocalStorage();
+            if (_products is not null)
+            {
+                foreach (var p in _products)
+                {
+                    var product = await productService.GetById(p.Id);
+                    if (p.Quantity > product.Quantity) p.Quantity = product.Quantity;
+                }
+            }
+            StateHasChanged();
+        }
+    }
+
+    public async Task RemoveFromCart(string id, int quantity)
+    {
+        await cartService.RemoveFromCart(id, quantity);
+        navigator.Refresh(true);
+    }
+    public void RemoveFromCartAlert(string id)
+    {
+        selectedId = id;
+    }
+    public async Task ClearLocalStorage()
+    {
+        await localStorage.ClearAsync();
+        navigator.Refresh(true);
+    }
+    public async Task GoToCheckOut()
+    {
+        var user = await authState.GetAuthenticationStateAsync();
+        if (user.User.Identity?.IsAuthenticated == true) checkAuth = true;
+        else if (user.User.Identity?.IsAuthenticated == false) checkAuth = false;
+        else checkAuth = null;
+    }
+    public async Task CheckOut()
+    {
+        if (_products is not null)
+        {
+            string orderId = string.Empty;
+            var user = await authState.GetAuthenticationStateAsync();
+            var userId = user.User.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+            if (userId is not null)
+            {
+                try
+                {
+                    await checkOutService.CheckOut(_products);
+                    orderId = await cartService.AddPurchase(cred, userId);
+                    _products = null;
+                }
+                catch (Exception ex)
+                {
+                    errorMessage = ex.Message;
+                }
+            }
+        navigator.NavigateTo($"/check-out/{orderId}", true);
+        }
+    }
+
+}

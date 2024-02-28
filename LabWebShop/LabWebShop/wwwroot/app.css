@@ -51,9 +51,11 @@ h1:focus {
 }
 
 .card {
-    height: 30rem;
+    height: 25rem;
     border-radius: 60px;
     min-width: 150px;
+    text-decoration: none;
+    position: relative;
 }
 .img-container {
     height: 15rem;
@@ -80,7 +82,6 @@ h1:focus {
     justify-content: center;
     align-items: center;
 }
-
 .sold-out-text{
     color: white;
     font-weight: 1000;
@@ -88,7 +89,9 @@ h1:focus {
     transform: rotate(-45deg);
 }
 .card-body {
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
 }
 .cart-alert {
     position: absolute;
@@ -96,7 +99,6 @@ h1:focus {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    
 }
 .overlay {
     position: fixed;
@@ -106,6 +108,10 @@ h1:focus {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
     z-index: 4;
+}
+
+.product-img {
+    width: 100%;
 }
 
 

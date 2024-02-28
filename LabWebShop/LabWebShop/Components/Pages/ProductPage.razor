@@ -1,0 +1,67 @@
+﻿@page "/products/{Id}"
+@inject IProductService productService
+@inject ICartService cartService
+@rendermode InteractiveServer
+@inject NavigationManager navigator
+
+
+<h3>ProductPage</h3>
+
+@if(p is null)
+{
+    <p>Oops... no product was found</p>
+}
+else
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-6">
+                <img class="product-img" src="@p.ImgUri"/>
+            </div>
+            <div class="col-6">
+                <h2>@p.ProductName</h2>
+                <p>Product Id: @p.ProductId</p>
+                <p>@p.Description</p>
+                <h3>€ @p.PriceEur</h3>
+                <p>Price in your country:</p>
+                <h3>@pricePLN Zloty</h3>
+                <p>In stock: @p.Quantity</p>
+                <InputSelect @bind-Value="quantity">
+                    <option></option>
+                    @for(int i = 0; i < 10; i++)
+                    {
+                        <option value="@(i + 1)">@(i + 1)</option>
+                    }
+                </InputSelect>
+                <Button Class="btn btn-primary" @onclick="() => InitializeAddToCart(p, quantity)" Disabled="(quantity is null ? true : false)">Add to cart</Button>
+            </div>
+        </div>
+</div>
+}
+
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+    ProductDto? p;
+    decimal pricePLN;
+    int? quantity;
+
+    public async Task InitializeAddToCart(ProductDto p, int? quantity)
+    {
+        await cartService.AddToCart(p, quantity??0);
+        navigator.Refresh(true);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id is not null)
+        {
+            var product = await productService.GetByProductId(Id);
+            p = product;
+        }
+        var currency = await productService.GetCurrency();
+
+        pricePLN = Math.Round((decimal)((p?.PriceEur * currency?.Exchange_rate) ?? 0), 2);
+    }
+}

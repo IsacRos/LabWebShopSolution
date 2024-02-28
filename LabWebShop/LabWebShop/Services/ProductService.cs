@@ -1,8 +1,9 @@
-﻿using LabWebShop.Data;
+﻿using LabWebShop.Classes;
+using LabWebShop.Data;
 using LabWebShop.Models;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Bson;
-using MongoDB.Driver;
+
 
 namespace LabWebShop.Services;
 
@@ -53,5 +54,58 @@ public class ProductService : IProductService
             _context.Products.Update(product);
             await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task<ProductDto> GetByProductId(string id)
+    {
+        var product = await _context.Products.AsNoTracking().FirstOrDefaultAsync(p => p.ProductId == id);
+        if (product != null)
+        {
+            ProductDto displayProduct = new()
+            {
+                Id = product.Id.ToString(),
+                ProductId = product.ProductId,
+                ProductName = product.ProductName,
+                Description = product.Description,
+                PriceEur = product.PriceEur,
+                ImgUri = product.ImgUri,
+                Quantity = product.Quantity
+            };
+            return displayProduct;
+        }
+        throw new ArgumentException("Couldn't find product");
+    }
+    public async Task<ProductDto> GetById(string id)
+    {
+        var product = await _context.Products.AsNoTracking().FirstOrDefaultAsync(x => x.Id == ObjectId.Parse(id));
+        if (product != null)
+        {
+            ProductDto displayProduct = new()
+            {
+                Id = product.Id.ToString(),
+                ProductId = product.ProductId,
+                ProductName = product.ProductName,
+                Description = product.Description,
+                PriceEur = product.PriceEur,
+                ImgUri = product.ImgUri,
+                Quantity = product.Quantity
+            };
+            return displayProduct;
+        }
+        throw new ArgumentException("Couldn't find product");
+    }
+
+
+    public async Task<CurrencyEx?> GetCurrency()
+    {
+        HttpClient http = new();
+        http.DefaultRequestHeaders.Add("X-Api-Key", "p3M9VIZ8/DSrLfKmnK4Xtg==scqEVRI7a47EhyFM");
+        var response = await http.GetAsync("https://api.api-ninjas.com/v1/exchangerate?pair=EUR_PLN");
+        if (response is not null)
+        {
+            var responseBody = await response.Content.ReadFromJsonAsync<CurrencyEx>();
+            return responseBody;
+        }
+        return null;
     }
 }

@@ -1,13 +1,15 @@
 ﻿@page "/"
 @inject IProductService productService
-@inject ILocalStorageService localStorage
+@inject ICartService cartService
 @rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
 
+<h1>Isacs Random SuperShop</h1>
+
 @if (products is null)
 {
-    <p>No inventory</p>
+    <p>Loading...</p>
 }
 else
 {
@@ -16,7 +18,7 @@ else
             @foreach (var p in products)
             {
                 <div class="col col-md-4 mb-2">
-                    <div class="card text-end border-5 border-dark p-2">
+                    <a class="card text-end border-5 border-dark p-2" href="/products/@p.ProductId">
                         <div class="img-container">
                             <img src="@p.ImgUri" class="card-img" alt="@p.ProductName"/>
                             @if(p.Quantity < 1)
@@ -28,29 +30,31 @@ else
                         </div>
                         <div class="card-body">
                             <h5 class="card-title">@p.ProductName</h5>
-                            <p style="font-size: 10px">@p.ProductId</p>
-                            <p class="card-text">@p.Description</p>
                             <h4 class="card-text text-danger">€ @p.PriceEur</h4>
                             @if (p.Quantity > 0)
                             {
-                                <button class="btn btn-primary" @onclick="() => AddToCartAlert(p.Id)">Add to cart</button>
+                                <a @onclick:preventDefault>
+                                    <button class="btn btn-primary" @onclick:preventDefault @onclick="() => AddToCartAlert(p.Id)">Add to cart</button>
+                                </a>
                             }
                             @if (p.Id == selectedId)
                             {
-                                <div class="overlay"/>
-                                <Alert id="@selectedId" Class="cart-alert" @ref="cartAlert" Color="AlertColor.Dark">
-                                    <p>In stock: @p.Quantity</p>
-                                    Quantity: <InputNumber @bind-Value="quantity"></InputNumber> 
-                                    <Button Class="btn btn-primary" @onclick="() => AddToCart(p)">Add</Button>
-                                    @if (errorMessage != null)
-                                    {
-                                        <p id="errorMessage">@errorMessage</p> 
-                                    }
-                                    <Button Class="btn btn-warning" @onclick="CloseAlert">Cancel</Button>
-                                </Alert>
+                                <a @onclick:preventDefault @onclick="CloseAlert" style="cursor: default" class="overlay" />
+                                <a @onclick:preventDefault style="cursor: default">
+                                    <Alert id="@selectedId" Class="cart-alert" @ref="cartAlert" Color="AlertColor.Dark">
+                                        <p>In stock: @p.Quantity</p>
+                                        Quantity: <InputNumber @bind-Value="quantity"></InputNumber>
+                                        <Button Class="btn btn-primary" @onclick="() => AddToCart(p)">Add</Button>
+                                        @if (errorMessage != null)
+                                        {
+                                            <p id="errorMessage">@errorMessage</p> 
+                                        }
+                                        <Button Class="btn btn-warning" @onclick="CloseAlert">Cancel</Button>
+                                    </Alert>
+                                </a>
                             }
                         </div>
-                    </div>
+                    </a>
                 </div>
             }
         </div>
@@ -63,6 +67,7 @@ else
     string? selectedId = null;
     string? errorMessage = null;
 
+
     List<ProductDto>? products;
 
     public void AddToCartAlert(string id)
@@ -74,7 +79,7 @@ else
     {
         if (quantity <= p.Quantity && quantity > 0)
         {
-            await localStorage.SetItemAsync(p.Id, quantity);
+            await cartService.AddToCart(p, quantity);
             quantity = 0;
             selectedId = null;
         }
@@ -94,9 +99,13 @@ else
         selectedId = null;
         errorMessage = null;
     }
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        products = await productService.GetAll();
+        if(firstRender)
+        {
+            products = await productService.GetAll();
+            StateHasChanged();
+        }
     }
 }
 

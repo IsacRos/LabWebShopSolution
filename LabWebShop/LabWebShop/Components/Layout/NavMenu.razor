@@ -13,32 +13,9 @@
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="AddProduct">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Add Product
-            </NavLink>
-        </div>
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="create-user">
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Create User
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="create-role">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Create Role
             </NavLink>
         </div>
         <div class="nav-item px-3">
@@ -46,6 +23,32 @@
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Login
             </NavLink>
         </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="cart">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Cart
+            </NavLink>
+        </div>
+        <CascadingAuthenticationState>
+            <AuthorizeView Roles="Admin">
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="AddProduct">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Add Product
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="create-role">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Create Role
+                    </NavLink>
+                </div>
+            </AuthorizeView>
+            <AuthorizeView>
+                <form method="POST" action="https://localhost:7214/api/LogOut">
+                    <button type="submit" class="btn btn-danger">
+                        <span class="bi bi-list-nested-nav-menu"></span> Log out
+                    </button>
+                </form>
+            </AuthorizeView>
+        </CascadingAuthenticationState>
     </nav>
 </div>
 
